@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Campus Lost & Found</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎓 Campus Lost & Found</h1>
+            <p>Help reunite students with their belongings</p>
+            <div class="tabs">
+                <button class="tab active" onclick="showTab('browse', event)">Browse Items</button>
+                <button class="tab" onclick="showTab('post', event)">Post Item</button>
+            </div>
+        </header>
+
+        <div id="browse-section" class="content-section active">
+            <input type="text" class="search-bar" id="searchInput" placeholder="🔍 Search for lost or found items...">
+            
+            <div class="filter-group">
+                <select id="categoryFilter">
+                    <option value="">All Categories</option>
+                    <option value="Electronics">Electronics</option>
+                    <option value="Clothing">Clothing</option>
+                    <option value="Books">Books</option>
+                    <option value="Accessories">Accessories</option>
+                    <option value="Other">Other</option>
+                </select>
+                <select id="statusFilter">
+                    <option value="">All Status</option>
+                    <option value="unclaimed">Unclaimed</option>
+                    <option value="claimed">Claimed</option>
+                </select>
+                <select id="typeFilter">
+                    <option value="">Lost & Found</option>
+                    <option value="lost">Lost Items</option>
+                    <option value="found">Found Items</option>
+                </select>
+            </div>
+
+            <div id="itemsGrid" class="items-grid"></div>
+        </div>
+
+        <div id="post-section" class="content-section">
+            <h2 style="margin-bottom: 20px;">Post a Lost or Found Item</h2>
+            <form id="postForm">
+                <div class="form-group">
+                    <label>Item Type</label>
+                    <select id="itemType" required>
+                        <option value="">Select...</option>
+                        <option value="lost">Lost Item</option>
+                        <option value="found">Found Item</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Item Name</label>
+                    <input type="text" id="itemName" placeholder="e.g., Black Backpack" required>
+                </div>
+                <div class="form-group">
+                    <label>Category</label>
+                    <select id="itemCategory" required>
+                        <option value="">Select...</option>
+                        <option value="Electronics">Electronics</option>
+                        <option value="Clothing">Clothing</option>
+                        <option value="Books">Books</option>
+                        <option value="Accessories">Accessories</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Description</label>
+                    <textarea id="itemDescription" placeholder="Describe the item in detail..." required></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Location</label>
+                    <input type="text" id="itemLocation" placeholder="e.g., Library 2nd Floor" required>
+                </div>
+                <div class="form-group">
+                    <label>Your Name</label>
+                    <input type="text" id="posterName" placeholder="Your name" required>
+                </div>
+                <div class="form-group">
+                    <label>Photo URL (optional)</label>
+                            <input type="file" accept="image/*" id="itemPhoto">
+                </div>
+                <button type="submit" class="btn">Post Item</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="messageModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Messages</h2>
+                <button class="close-btn" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="messages-list" id="messagesList"></div>
+            <form id="messageForm">
+                <div class="form-group">
+                    <label>Your Name</label>
+                    <input type="text" id="messageSender" required>
+                </div>
+                <div class="form-group">
+                    <label>Message</label>
+                    <textarea id="messageText" rows="3" required></textarea>
+                </div>
+                <button type="submit" class="btn">Send Message</button>
+            </form>
+        </div>
+    </div>
+    <script src="app.js"></script>
+</body>
+</html>
