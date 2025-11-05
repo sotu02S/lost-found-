@@ -14,7 +14,7 @@ function initSampleData() {
             poster: 'John Doe',
             status: 'unclaimed',
             date: new Date().toLocaleDateString(),
-            photo: 'https://miro.medium.com/1*n35mA_P-qf8lahgwaIzEOw.jpeg',
+            photo: 'https://images.unsplash.com/photo-1602143407151-7111542de6e8?w=400',
             messages: []
         },
         {
@@ -27,7 +27,7 @@ function initSampleData() {
             poster: 'Jane Smith',
             status: 'unclaimed',
             date: new Date().toLocaleDateString(),
-            photo: 'https://images.unsplash.com/photo-1591290619762-f61a75ab6dac?w=400',
+            photo: 'https://miro.medium.com/1*n35mA_P-qf8lahgwaIzEOw.jpeg',
             messages: []
         }
     ];
@@ -175,4 +175,5 @@ window.openMessages = openMessages;
 window.markClaimed = markClaimed;
 window.closeModal = closeModal;
 window.showTab = showTab;
+
 
