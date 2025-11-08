@@ -1,37 +1,34 @@
+const API_URL = 'http://localhost:3000/api';
 let items = [];
 let currentItemId = null;
 
-// Sample data initialization
-function initSampleData() {
-    items = [
-        {
-            id: 1,
-            type: 'found',
-            name: 'Blue Water Bottle',
-            category: 'Other',
-            description: 'Blue stainless steel water bottle found near the gym',
-            location: 'Sports Complex',
-            poster: 'John Doe',
-            status: 'unclaimed',
-            date: new Date().toLocaleDateString(),
-            photo: 'https://images.unsplash.com/photo-1602143407151-7111542de6e8?w=400',
-            messages: []
-        },
-        {
-            id: 2,
-            type: 'lost',
-            name: 'Laptop Charger',
-            category: 'Electronics',
-            description: 'MacBook Pro charger with USB-C cable, lost in Room 301',
-            location: 'Engineering Building',
-            poster: 'Jane Smith',
-            status: 'unclaimed',
-            date: new Date().toLocaleDateString(),
-            photo: 'https://miro.medium.com/1*n35mA_P-qf8lahgwaIzEOw.jpeg',
-            messages: []
+// Fetch items from backend
+async function fetchItems() {
+    try {
+        const searchTerm = document.getElementById('searchInput').value;
+        const categoryFilter = document.getElementById('categoryFilter').value;
+        const statusFilter = document.getElementById('statusFilter').value;
+        const typeFilter = document.getElementById('typeFilter').value;
+
+        const params = new URLSearchParams();
+        if (searchTerm) params.append('search', searchTerm);
+        if (categoryFilter) params.append('category', categoryFilter);
+        if (statusFilter) params.append('status', statusFilter);
+        if (typeFilter) params.append('type', typeFilter);
+
+        const response = await fetch(`${API_URL}/items?${params}`);
+        const result = await response.json();
+        
+        if (result.success) {
+            items = result.data;
+            displayItems();
+        } else {
+            console.error('Error fetching items:', result.message);
         }
-    ];
-    displayItems();
+    } catch (error) {
+        console.error('Error fetching items:', error);
+        alert('Failed to load items. Please check if the server is running.');
+    }
 }
 
 function showTab(tab, event) {
@@ -43,26 +40,13 @@ function showTab(tab, event) {
 
 function displayItems() {
     const grid = document.getElementById('itemsGrid');
-    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-    const categoryFilter = document.getElementById('categoryFilter').value;
-    const statusFilter = document.getElementById('statusFilter').value;
-    const typeFilter = document.getElementById('typeFilter').value;
 
-    const filtered = items.filter(item => {
-        const matchesSearch = item.name.toLowerCase().includes(searchTerm) || 
-                                item.description.toLowerCase().includes(searchTerm);
-        const matchesCategory = !categoryFilter || item.category === categoryFilter;
-        const matchesStatus = !statusFilter || item.status === statusFilter;
-        const matchesType = !typeFilter || item.type === typeFilter;
-        return matchesSearch && matchesCategory && matchesStatus && matchesType;
-    });
-
-    if (filtered.length === 0) {
+    if (items.length === 0) {
         grid.innerHTML = '<div class="empty-state"><h3>No items found</h3><p>Try adjusting your search or filters</p></div>';
         return;
     }
 
-    grid.innerHTML = filtered.map(item => `
+    grid.innerHTML = items.map(item => `
         <div class="item-card">
             <img src="${item.photo || 'https://via.placeholder.com/400x200?text=No+Image'}" 
                  alt="${item.name}" class="item-image" 
@@ -89,15 +73,31 @@ function displayItems() {
     `).join('');
 }
 
-function markClaimed(id) {
-    const item = items.find(i => i.id === id);
-    if (item) {
-        item.status = 'claimed';
-        displayItems();
+async function markClaimed(id) {
+    try {
+        const response = await fetch(`${API_URL}/items/${id}/status`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ status: 'claimed' })
+        });
+
+        const result = await response.json();
+        
+        if (result.success) {
+            await fetchItems();
+            alert('Item marked as claimed successfully!');
+        } else {
+            alert('Error: ' + result.message);
+        }
+    } catch (error) {
+        console.error('Error marking item as claimed:', error);
+        alert('Failed to update item status');
     }
 }
 
-function openMessages(id) {
+async function openMessages(id) {
     currentItemId = id;
     const item = items.find(i => i.id === id);
     const modal = document.getElementById('messageModal');
@@ -122,58 +122,87 @@ function closeModal() {
     currentItemId = null;
 }
 
-document.getElementById('postForm').addEventListener('submit', function(e) {
+document.getElementById('postForm').addEventListener('submit', async function(e) {
     e.preventDefault();
     
-    const newItem = {
-        id: items.length ? Math.max(...items.map(i => i.id))+1 : 1,
-        type: document.getElementById('itemType').value,
-        name: document.getElementById('itemName').value,
-        category: document.getElementById('itemCategory').value,
-        description: document.getElementById('itemDescription').value,
-        location: document.getElementById('itemLocation').value,
-        poster: document.getElementById('posterName').value,
-        photo: document.getElementById('itemPhoto').value,
-        status: 'unclaimed',
-        date: new Date().toLocaleDateString(),
-        messages: []
-    };
+    const formData = new FormData();
+    formData.append('type', document.getElementById('itemType').value);
+    formData.append('name', document.getElementById('itemName').value);
+    formData.append('category', document.getElementById('itemCategory').value);
+    formData.append('description', document.getElementById('itemDescription').value);
+    formData.append('location', document.getElementById('itemLocation').value);
+    formData.append('poster', document.getElementById('posterName').value);
     
-    items.unshift(newItem);
-    displayItems();
-    this.reset();
-    showTab('browse');
-    document.querySelector('.tab').click();
-    alert('Item posted successfully!');
-});
+    const photoFile = document.getElementById('itemPhoto').files[0];
+    if (photoFile) {
+        formData.append('photo', photoFile);
+    }
 
-document.getElementById('messageForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-    const item = items.find(i => i.id === currentItemId);
-    if (item) {
-        const message = {
-            sender: document.getElementById('messageSender').value,
-            text: document.getElementById('messageText').value,
-            date: new Date().toLocaleString()
-        };
-        item.messages.push(message);
-        this.reset();
-        openMessages(currentItemId);
-        displayItems();
+    try {
+        const response = await fetch(`${API_URL}/items`, {
+            method: 'POST',
+            body: formData
+        });
+
+        const result = await response.json();
+        
+        if (result.success) {
+            await fetchItems();
+            this.reset();
+            showTab('browse');
+            document.querySelector('.tab').click();
+            alert('Item posted successfully!');
+        } else {
+            alert('Error: ' + result.message);
+        }
+    } catch (error) {
+        console.error('Error posting item:', error);
+        alert('Failed to post item. Please check if the server is running.');
     }
 });
 
-document.getElementById('searchInput').addEventListener('input', displayItems);
-document.getElementById('categoryFilter').addEventListener('change', displayItems);
-document.getElementById('statusFilter').addEventListener('change', displayItems);
-document.getElementById('typeFilter').addEventListener('change', displayItems);
+document.getElementById('messageForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const messageData = {
+        sender: document.getElementById('messageSender').value,
+        text: document.getElementById('messageText').value
+    };
 
-initSampleData();
+    try {
+        const response = await fetch(`${API_URL}/items/${currentItemId}/messages`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(messageData)
+        });
+
+        const result = await response.json();
+        
+        if (result.success) {
+            await fetchItems();
+            this.reset();
+            openMessages(currentItemId);
+        } else {
+            alert('Error: ' + result.message);
+        }
+    } catch (error) {
+        console.error('Error sending message:', error);
+        alert('Failed to send message');
+    }
+});
+
+document.getElementById('searchInput').addEventListener('input', fetchItems);
+document.getElementById('categoryFilter').addEventListener('change', fetchItems);
+document.getElementById('statusFilter').addEventListener('change', fetchItems);
+document.getElementById('typeFilter').addEventListener('change', fetchItems);
+
+// Initialize
+fetchItems();
 
 // Make functions globally accessible for inline event handlers
 window.openMessages = openMessages;
 window.markClaimed = markClaimed;
 window.closeModal = closeModal;
 window.showTab = showTab;
-
-
